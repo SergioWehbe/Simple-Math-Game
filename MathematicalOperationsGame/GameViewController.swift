@@ -24,7 +24,7 @@ class GameViewController: UIViewController {
     private var operand1Label : UILabel!
     private var operand2Label : UILabel!
     
-    private var letterButtons = [UIButton]()
+    private var answerButtons = [UIButton]()
     
     private var correctAnswer : Double = 0
     private var score = 0 {
@@ -78,7 +78,7 @@ class GameViewController: UIViewController {
 
                 buttonsView.addSubview(letterButton)
 
-                letterButtons.append(letterButton)
+                answerButtons.append(letterButton)
             }
         }
         
@@ -148,9 +148,9 @@ class GameViewController: UIViewController {
         
         
         let indexCorrectAnswer = Int.random(in: 0...5)
-        letterButtons[indexCorrectAnswer].setTitle(correctAnswer.toString, for: .normal)
+        answerButtons[indexCorrectAnswer].setTitle(correctAnswer.toString, for: .normal)
         
-        for (index, button) in letterButtons.enumerated() {
+        for (index, button) in answerButtons.enumerated() {
             if index == indexCorrectAnswer {
                 continue
             }
@@ -160,13 +160,13 @@ class GameViewController: UIViewController {
             switch mathOperation {
             case .division:
                 if incorrectAnswer == 0 {
-                    incorrectAnswer += Double.random(in: 0.1...10)
+                    incorrectAnswer += Double(Int.random(in: 1...10))
                 }
                 else {
                     while incorrectAnswer == correctAnswer {
                         incorrectAnswer *= Double.random(in: 0.4...1.6)
-                        incorrectAnswer = incorrectAnswer.roundedToNearestHundredth
                     }
+                    incorrectAnswer = incorrectAnswer.roundedToNearestHundredth
                 }
 
             default:
