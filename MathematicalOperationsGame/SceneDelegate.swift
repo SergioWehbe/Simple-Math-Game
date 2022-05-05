@@ -22,7 +22,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         //2
         window?.windowScene = windowScene
         //3
-        window?.rootViewController = GameViewController()
+        window?.rootViewController = MainMenuViewController()
         //4
         window?.makeKeyAndVisible()
 

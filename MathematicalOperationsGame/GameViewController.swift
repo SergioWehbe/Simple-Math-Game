@@ -35,7 +35,15 @@ class GameViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
         view.backgroundColor = .white
+        
+        let quitButton = UIButton(type: .system)
+        quitButton.translatesAutoresizingMaskIntoConstraints = false
+        quitButton.titleLabel?.font = UIFont.systemFont(ofSize: 20)
+        quitButton.setTitle("Quit", for: .normal)
+        quitButton.addTarget(self, action: #selector(onQuitButtonTapped(_:)), for: .touchUpInside)
+        view.addSubview(quitButton)
         
         scoreLabel = UILabel()
         scoreLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -44,61 +52,65 @@ class GameViewController: UIViewController {
         
         mathOperationLabel = UILabel()
         mathOperationLabel.translatesAutoresizingMaskIntoConstraints = false
-        mathOperationLabel.text = "+"
         view.addSubview(mathOperationLabel)
         
         operand1Label = UILabel()
         operand1Label.translatesAutoresizingMaskIntoConstraints = false
-        operand1Label.text = "Number1"
         view.addSubview(operand1Label)
         
         operand2Label = UILabel()
         operand2Label.translatesAutoresizingMaskIntoConstraints = false
-        operand2Label.text = "Number2"
         view.addSubview(operand2Label)
         
-        let buttonsView = UIView()
-        buttonsView.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(buttonsView)
+        let answerButtonsView = UIView()
+        answerButtonsView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(answerButtonsView)
         
-        let width = 100
-        let height = 75
-        // create 6 buttons as a 2x3 grid
-        for row in 0..<2 {
-            for col in 0..<3 {
+        let answerButtonsRowCount = 2
+        let answerButtonsColumnCount = 3
+        let answerButtonWidth = 100
+        let answerButtonHeight = 75
+        
+        for row in 0..<answerButtonsRowCount {
+            for column in 0..<answerButtonsColumnCount {
                 let letterButton = UIButton(type: .system)
                 letterButton.titleLabel?.font = UIFont.systemFont(ofSize: 20)
-                letterButton.setTitle("2.5", for: .normal)
-                letterButton.directionalLayoutMargins.leading = 100
-                letterButton.directionalLayoutMargins.trailing = 100
                 letterButton.addTarget(self, action: #selector(answerButtonTapped(_:)), for: .touchUpInside)
 
-                let frame = CGRect(x: col * width, y: row * height, width: width, height: height)
+                let frame = CGRect(x: column * answerButtonWidth, y: row * answerButtonHeight, width: answerButtonWidth, height: answerButtonHeight)
                 letterButton.frame = frame
 
-                buttonsView.addSubview(letterButton)
+                answerButtonsView.addSubview(letterButton)
 
                 answerButtons.append(letterButton)
             }
         }
         
+        let paddingFromScreenEdge: CGFloat = 10
+        let paddingAroundMathOperation: CGFloat = 20
+        let paddingBetweenMathOperationAndAnswerButtonsView: CGFloat = 75
+        let paddingBetweenAnswerButtonsViewAndScreenBottom: CGFloat = 50
+        
         let constraints = [
-            scoreLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 10),
-            scoreLabel.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -10),
+            quitButton.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: paddingFromScreenEdge),
+            quitButton.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: paddingFromScreenEdge),
             
-            mathOperationLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            mathOperationLabel.bottomAnchor.constraint(equalTo: buttonsView.topAnchor, constant: -75),
+            scoreLabel.centerYAnchor.constraint(equalTo: quitButton.centerYAnchor),
+            scoreLabel.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -paddingFromScreenEdge),
             
-            operand1Label.trailingAnchor.constraint(equalTo: mathOperationLabel.leadingAnchor, constant: -20),
+            mathOperationLabel.centerXAnchor.constraint(equalTo: view.safeAreaLayoutGuide.centerXAnchor),
+            mathOperationLabel.bottomAnchor.constraint(equalTo: answerButtonsView.topAnchor, constant: -paddingBetweenMathOperationAndAnswerButtonsView),
+            
+            operand1Label.trailingAnchor.constraint(equalTo: mathOperationLabel.leadingAnchor, constant: -paddingAroundMathOperation),
             operand1Label.topAnchor.constraint(equalTo: mathOperationLabel.topAnchor),
             
-            operand2Label.leadingAnchor.constraint(equalTo: mathOperationLabel.trailingAnchor, constant: 20),
+            operand2Label.leadingAnchor.constraint(equalTo: mathOperationLabel.trailingAnchor, constant: paddingAroundMathOperation),
             operand2Label.topAnchor.constraint(equalTo: mathOperationLabel.topAnchor),
             
-            buttonsView.widthAnchor.constraint(equalToConstant: CGFloat(3*width)),
-            buttonsView.heightAnchor.constraint(equalToConstant: CGFloat(2*height)),
-            buttonsView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            buttonsView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -50),
+            answerButtonsView.widthAnchor.constraint(equalToConstant: CGFloat(answerButtonsColumnCount * answerButtonWidth)),
+            answerButtonsView.heightAnchor.constraint(equalToConstant: CGFloat(answerButtonsRowCount * answerButtonHeight)),
+            answerButtonsView.centerXAnchor.constraint(equalTo: view.safeAreaLayoutGuide.centerXAnchor),
+            answerButtonsView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -paddingBetweenAnswerButtonsViewAndScreenBottom),
         ]
         
         NSLayoutConstraint.activate(constraints)
@@ -147,7 +159,7 @@ class GameViewController: UIViewController {
         }
         
         
-        let indexCorrectAnswer = Int.random(in: 0...5)
+        let indexCorrectAnswer = Int.random(in: 0...answerButtons.count-1)
         answerButtons[indexCorrectAnswer].setTitle(correctAnswer.toString, for: .normal)
         
         for (index, button) in answerButtons.enumerated() {
@@ -163,7 +175,7 @@ class GameViewController: UIViewController {
                     incorrectAnswer += Double(Int.random(in: 1...10))
                 }
                 else {
-                    while incorrectAnswer == correctAnswer {
+                    while abs(incorrectAnswer - correctAnswer) < 0.03 {
                         incorrectAnswer *= Double.random(in: 0.4...1.6)
                     }
                     incorrectAnswer = incorrectAnswer.roundedToNearestHundredth
@@ -177,6 +189,10 @@ class GameViewController: UIViewController {
             
             button.setTitle(incorrectAnswer.toString, for: .normal)
         }
+    }
+    
+    @IBAction private func onQuitButtonTapped(_ sender: UIButton) {
+        self.dismiss(animated: true)
     }
     
     private enum MathOperation: CaseIterable {
