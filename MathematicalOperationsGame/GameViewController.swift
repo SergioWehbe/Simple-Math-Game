@@ -20,18 +20,26 @@ extension Double {
 class GameViewController: UIViewController {
     
     private var scoreLabel : UILabel!
+    private var score = 0 {
+        didSet {
+            scoreLabel.text = "Score: \(score)"
+        }
+    }
+    
     private var mathOperationLabel : UILabel!
     private var operand1Label : UILabel!
     private var operand2Label : UILabel!
     
     private var answerButtons = [UIButton]()
     
+    private var tutorialLabel : UILabel!
+    private var tutorialRectangle: UIView!
+    private var tutorialConstraintsEquation = [NSLayoutConstraint]()
+    private var tutorialConstraintsAnswers = [NSLayoutConstraint]()
+    private var isTutorialDone = false
+    private let isTutorialDoneString = "isTutorialDone"
+    
     private var correctAnswer : Double = 0
-    private var score = 0 {
-        didSet {
-            scoreLabel.text = "Score: \(score)"
-        }
-    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -91,7 +99,7 @@ class GameViewController: UIViewController {
         let paddingBetweenMathOperationAndAnswerButtonsView: CGFloat = 75
         let paddingBetweenAnswerButtonsViewAndScreenBottom: CGFloat = 50
         
-        let constraints = [
+        var constraints = [
             quitButton.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: paddingFromScreenEdge),
             quitButton.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: paddingFromScreenEdge),
             
@@ -113,15 +121,96 @@ class GameViewController: UIViewController {
             answerButtonsView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -paddingBetweenAnswerButtonsViewAndScreenBottom),
         ]
         
+        if UserDefaults.standard.object(forKey: isTutorialDoneString) == nil {
+            UserDefaults.standard.set(false, forKey: isTutorialDoneString)
+        }
+        if let isTutorialDone = UserDefaults.standard.object(forKey: isTutorialDoneString) as? Bool {
+            
+            self.isTutorialDone = isTutorialDone
+            
+            if !isTutorialDone {
+                
+                let tutorialColor = CGColor(red: 0, green: 0.8, blue: 0, alpha: 1)
+                
+                tutorialLabel = UILabel()
+                tutorialLabel.translatesAutoresizingMaskIntoConstraints = false
+                tutorialLabel.text = "Calculate the answer"
+                tutorialLabel.textColor = UIColor(cgColor: tutorialColor)
+                tutorialLabel.alpha = 0
+                view.addSubview(tutorialLabel)
+                view.sendSubviewToBack(tutorialLabel)
+                
+                tutorialRectangle = UIView()
+                tutorialRectangle.translatesAutoresizingMaskIntoConstraints = false
+                tutorialRectangle.layer.borderWidth = 2
+                tutorialRectangle.layer.borderColor = tutorialColor
+                tutorialRectangle.alpha = 0
+                view.addSubview(tutorialRectangle)
+                view.sendSubviewToBack(tutorialRectangle)
+                
+                tutorialConstraintsEquation = [
+                    tutorialRectangle.topAnchor.constraint(equalTo: mathOperationLabel.topAnchor, constant: -20),
+                    tutorialRectangle.bottomAnchor.constraint(equalTo: mathOperationLabel.bottomAnchor, constant: 20),
+                    tutorialRectangle.leadingAnchor.constraint(equalTo: operand1Label.leadingAnchor, constant: -20),
+                    tutorialRectangle.trailingAnchor.constraint(equalTo: operand2Label.trailingAnchor, constant: 20),
+                ]
+                
+                tutorialConstraintsAnswers = [
+                    tutorialRectangle.topAnchor.constraint(equalTo: answerButtonsView.topAnchor),
+                    tutorialRectangle.bottomAnchor.constraint(equalTo: answerButtonsView.bottomAnchor),
+                    tutorialRectangle.leadingAnchor.constraint(equalTo: answerButtonsView.leadingAnchor),
+                    tutorialRectangle.trailingAnchor.constraint(equalTo: answerButtonsView.trailingAnchor),
+                ]
+                
+                constraints.append(contentsOf: [
+                    tutorialLabel.centerXAnchor.constraint(equalTo: tutorialRectangle.centerXAnchor),
+                    tutorialLabel.bottomAnchor.constraint(equalTo: tutorialRectangle.topAnchor, constant: -20),
+                ])
+                
+                constraints.append(contentsOf: tutorialConstraintsEquation)
+            }
+        }
+        
         NSLayoutConstraint.activate(constraints)
         
         score = 0
         nextRound()
     }
     
+    override func viewDidAppear(_ animated: Bool) {
+        if !isTutorialDone {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                UIView.animate(withDuration: 0.5) {
+                    self.tutorialLabel.alpha = 1
+                    self.tutorialRectangle.alpha = 1
+                }
+                
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
+                    self.tutorialLabel.alpha = 0
+                    self.tutorialRectangle.alpha = 0
+                    UIView.animate(withDuration: 0.5) {
+                        self.tutorialLabel.alpha = 1
+                        self.tutorialRectangle.alpha = 1
+                        self.tutorialLabel.text = "Choose the correct answer"
+                        NSLayoutConstraint.deactivate(self.tutorialConstraintsEquation)
+                        NSLayoutConstraint.activate(self.tutorialConstraintsAnswers)
+                    }
+                }
+            }
+        }
+    }
+    
     @IBAction private func answerButtonTapped(_ sender: UIButton) {
         if sender.currentTitle == correctAnswer.toString {
             score += 1
+            
+            if let isTutorialDone = UserDefaults.standard.object(forKey: isTutorialDoneString) as? Bool,
+               !isTutorialDone {
+                
+                UserDefaults.standard.set(true, forKey: isTutorialDoneString)
+                tutorialLabel.removeFromSuperview()
+                tutorialRectangle.removeFromSuperview()
+            }
         }
         else {
             score -= 1
