@@ -7,7 +7,10 @@
 
 import UIKit
 
-class MainMenuViewController: UIViewController {
+final class MainMenuViewController: UIViewController {
+    
+    private let infiniteModeString = "Infinite Mode"
+    private let timeModeString = "Time Mode"
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -34,14 +37,14 @@ class MainMenuViewController: UIViewController {
         
         let infiniteModeButton = UIButton(type: .system)
         infiniteModeButton.translatesAutoresizingMaskIntoConstraints = false
-        infiniteModeButton.setTitle("Infinite Mode", for: .normal)
+        infiniteModeButton.setTitle(infiniteModeString, for: .normal)
         infiniteModeButton.addTarget(self, action: #selector(onPlay(_:)), for: .touchUpInside)
         infiniteModeButton.configuration = buttonConfiguration
         view.addSubview(infiniteModeButton)
         
         let timedModeButton = UIButton(type: .system)
         timedModeButton.translatesAutoresizingMaskIntoConstraints = false
-        timedModeButton.setTitle("Timed Mode", for: .normal)
+        timedModeButton.setTitle(timeModeString, for: .normal)
         timedModeButton.addTarget(self, action: #selector(onPlay(_:)), for: .touchUpInside)
         timedModeButton.configuration = buttonConfiguration
         view.addSubview(timedModeButton)
@@ -71,8 +74,24 @@ class MainMenuViewController: UIViewController {
         NSLayoutConstraint.activate(constraints)
     }
     
-    @IBAction private func onPlay(_ sender: UIButton) {
+    @objc private func onPlay(_ sender: UIButton) {
+        
+        var gameMode : GameViewController.GameMode = .time
+        
+        if let titleButton = sender.currentTitle {
+            
+            switch titleButton {
+            case infiniteModeString:
+                gameMode = .infinite
+            case timeModeString:
+                gameMode = .time
+            default:
+                gameMode = .time
+            }
+        }
+        
         let gameViewController = GameViewController()
+        gameViewController.gameMode = gameMode
         gameViewController.modalPresentationStyle = .fullScreen
         gameViewController.modalTransitionStyle = .crossDissolve
 

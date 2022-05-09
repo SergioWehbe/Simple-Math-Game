@@ -17,12 +17,20 @@ extension Double {
     }
 }
 
-class GameViewController: UIViewController {
+final class GameViewController: UIViewController {
+    
+    var gameMode : GameMode = .time
     
     private var scoreLabel : UILabel!
     private var score = 0 {
         didSet {
             scoreLabel.text = "Score: \(score)"
+        }
+    }
+    private var bestScoreLabel : UILabel!
+    private var bestScore = 0 {
+        didSet {
+            bestScoreLabel.text = "Best: \(bestScore)"
         }
     }
     
@@ -41,6 +49,14 @@ class GameViewController: UIViewController {
     
     private var correctAnswer : Double = 0
     
+    private var timer: Timer?
+    private var timeFinishDate: Date = .now
+    private var timeRemainingLabel : UILabel!
+    private let timeRemainingInitial = 60
+    
+    private let bestScoreTimeModeString = "bestScoreTimeMode"
+    private let bestScoreInfiniteModeString = "bestScoreInfiniteMode"
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -57,6 +73,11 @@ class GameViewController: UIViewController {
         scoreLabel.translatesAutoresizingMaskIntoConstraints = false
         scoreLabel.font = UIFont.systemFont(ofSize: 20)
         view.addSubview(scoreLabel)
+        
+        bestScoreLabel = UILabel()
+        bestScoreLabel.translatesAutoresizingMaskIntoConstraints = false
+        bestScoreLabel.font = UIFont.systemFont(ofSize: 20)
+        view.addSubview(bestScoreLabel)
         
         mathOperationLabel = UILabel()
         mathOperationLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -105,6 +126,9 @@ class GameViewController: UIViewController {
             
             scoreLabel.centerYAnchor.constraint(equalTo: quitButton.centerYAnchor),
             scoreLabel.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -paddingFromScreenEdge),
+            
+            bestScoreLabel.trailingAnchor.constraint(equalTo: scoreLabel.trailingAnchor),
+            bestScoreLabel.topAnchor.constraint(equalTo: scoreLabel.bottomAnchor, constant: 20),
             
             mathOperationLabel.centerXAnchor.constraint(equalTo: view.safeAreaLayoutGuide.centerXAnchor),
             mathOperationLabel.bottomAnchor.constraint(equalTo: answerButtonsView.topAnchor, constant: -paddingBetweenMathOperationAndAnswerButtonsView),
@@ -171,9 +195,41 @@ class GameViewController: UIViewController {
             }
         }
         
+        if gameMode == .time {
+            
+            timeRemainingLabel = UILabel()
+            timeRemainingLabel.translatesAutoresizingMaskIntoConstraints = false
+            timeRemainingLabel.font = UIFont.monospacedSystemFont(ofSize: 20, weight: .regular)
+            view.addSubview(timeRemainingLabel)
+            
+            constraints.append(contentsOf: [
+                timeRemainingLabel.leadingAnchor.constraint(equalTo: view.centerXAnchor, constant: -60),
+                timeRemainingLabel.centerYAnchor.constraint(equalTo: scoreLabel.centerYAnchor),
+            ])
+            
+            timer = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(timerStep), userInfo: nil, repeats: true)
+            timeFinishDate = .now.addingTimeInterval(60)
+            timeRemainingLabel.text = "Time: 1 min"
+        }
+        
         NSLayoutConstraint.activate(constraints)
         
         score = 0
+        
+        switch gameMode {
+        case .infinite:
+            if let bestScore = UserDefaults.standard.object(forKey: bestScoreInfiniteModeString) as? Int {
+                self.bestScore = bestScore
+            }
+        case .time:
+            if let bestScore = UserDefaults.standard.object(forKey: bestScoreTimeModeString) as? Int {
+                self.bestScore = bestScore
+            }
+            else {
+                bestScore = 0
+            }
+        }
+        
         nextRound()
     }
     
@@ -200,7 +256,7 @@ class GameViewController: UIViewController {
         }
     }
     
-    @IBAction private func answerButtonTapped(_ sender: UIButton) {
+    @objc private func answerButtonTapped(_ sender: UIButton) {
         if sender.currentTitle == correctAnswer.toString {
             score += 1
             
@@ -210,6 +266,11 @@ class GameViewController: UIViewController {
                 UserDefaults.standard.set(true, forKey: isTutorialDoneString)
                 tutorialLabel.removeFromSuperview()
                 tutorialRectangle.removeFromSuperview()
+            }
+            
+            if score > bestScore && gameMode == .infinite {
+                UserDefaults.standard.set(score, forKey: bestScoreInfiniteModeString)
+                bestScore = score
             }
         }
         else {
@@ -280,8 +341,36 @@ class GameViewController: UIViewController {
         }
     }
     
-    @IBAction private func onQuitButtonTapped(_ sender: UIButton) {
+    @objc private func timerStep() {
+        let timeRemaining = timeFinishDate.timeIntervalSinceNow
+        if timeRemaining > 0 {
+            setTimeRemainingLabelText(timeRemaining: timeRemaining)
+        } else {
+            timer?.invalidate()
+            setTimeRemainingLabelText(timeRemaining: 0)
+            
+            for button in answerButtons {
+                button.isEnabled = false
+            }
+            
+            if score > bestScore {
+                UserDefaults.standard.set(score, forKey: bestScoreTimeModeString)
+                bestScore = score
+            }
+        }
+    }
+    
+    private func setTimeRemainingLabelText(timeRemaining: Double) {
+        timeRemainingLabel.text = "Time: \(round(timeRemaining).toString) s"
+    }
+    
+    @objc private func onQuitButtonTapped(_ sender: UIButton) {
         self.dismiss(animated: true)
+    }
+    
+    enum GameMode {
+        case infinite
+        case time
     }
     
     private enum MathOperation: CaseIterable {
