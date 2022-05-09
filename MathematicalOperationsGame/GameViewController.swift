@@ -242,14 +242,13 @@ final class GameViewController: UIViewController {
                 }
                 
                 DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
-                    self.tutorialLabel.alpha = 0
-                    self.tutorialRectangle.alpha = 0
+                    
                     UIView.animate(withDuration: 0.5) {
-                        self.tutorialLabel.alpha = 1
-                        self.tutorialRectangle.alpha = 1
+                        
                         self.tutorialLabel.text = "Choose the correct answer"
                         NSLayoutConstraint.deactivate(self.tutorialConstraintsEquation)
                         NSLayoutConstraint.activate(self.tutorialConstraintsAnswers)
+                        self.view.layoutIfNeeded()
                     }
                 }
             }
