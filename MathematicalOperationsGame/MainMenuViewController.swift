@@ -11,6 +11,7 @@ final class MainMenuViewController: UIViewController {
     
     private let infiniteModeString = "Infinite Mode"
     private let timeModeString = "Time Mode"
+    private let leaderboardsString = "Leaderboards"
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -34,20 +35,35 @@ final class MainMenuViewController: UIViewController {
         var buttonConfiguration = UIButton.Configuration.filled()
         buttonConfiguration.buttonSize = .large
         buttonConfiguration.cornerStyle = .medium
+        buttonConfiguration.imagePadding = 5
         
         let infiniteModeButton = UIButton(type: .system)
         infiniteModeButton.translatesAutoresizingMaskIntoConstraints = false
         infiniteModeButton.setTitle(infiniteModeString, for: .normal)
         infiniteModeButton.addTarget(self, action: #selector(onPlay(_:)), for: .touchUpInside)
         infiniteModeButton.configuration = buttonConfiguration
+        let infiniteModeButtonImage = UIImage(systemName: "infinity")?.withTintColor(.white, renderingMode: .alwaysOriginal)
+        infiniteModeButton.setImage(infiniteModeButtonImage, for: .normal)
         view.addSubview(infiniteModeButton)
         
-        let timedModeButton = UIButton(type: .system)
-        timedModeButton.translatesAutoresizingMaskIntoConstraints = false
-        timedModeButton.setTitle(timeModeString, for: .normal)
-        timedModeButton.addTarget(self, action: #selector(onPlay(_:)), for: .touchUpInside)
-        timedModeButton.configuration = buttonConfiguration
-        view.addSubview(timedModeButton)
+        let timeModeButton = UIButton(type: .system)
+        timeModeButton.translatesAutoresizingMaskIntoConstraints = false
+        timeModeButton.setTitle(timeModeString, for: .normal)
+        timeModeButton.addTarget(self, action: #selector(onPlay(_:)), for: .touchUpInside)
+        timeModeButton.configuration = buttonConfiguration
+        let timeModeButtonImage = UIImage(systemName: "clock")?.withTintColor(.white, renderingMode: .alwaysOriginal)
+        timeModeButton.setImage(timeModeButtonImage, for: .normal)
+        view.addSubview(timeModeButton)
+        
+        // Button at the bottom
+        let leaderboardsButton = UIButton(type: .system)
+        leaderboardsButton.translatesAutoresizingMaskIntoConstraints = false
+        leaderboardsButton.setTitle(leaderboardsString, for: .normal)
+        leaderboardsButton.addTarget(self, action: #selector(onLeaderboardsButtonTapped), for: .touchUpInside)
+        leaderboardsButton.configuration = buttonConfiguration
+        let leaderboardsButtonImage = UIImage(systemName: "person.3")?.withTintColor(.white, renderingMode: .alwaysOriginal)
+        leaderboardsButton.setImage(leaderboardsButtonImage, for: .normal)
+        view.addSubview(leaderboardsButton)
         
         
         let constraints = [
@@ -65,10 +81,17 @@ final class MainMenuViewController: UIViewController {
             infiniteModeButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             infiniteModeButton.topAnchor.constraint(equalTo: centerLayoutGuide.topAnchor),
 
-            timedModeButton.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.5),
-            timedModeButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            timedModeButton.topAnchor.constraint(equalTo: infiniteModeButton.bottomAnchor, constant: 20),
-            timedModeButton.bottomAnchor.constraint(equalTo: centerLayoutGuide.bottomAnchor),
+            timeModeButton.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.5),
+            timeModeButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            timeModeButton.topAnchor.constraint(equalTo: infiniteModeButton.bottomAnchor, constant: 20),
+            timeModeButton.bottomAnchor.constraint(equalTo: centerLayoutGuide.bottomAnchor),
+            
+            // Button at the bottom
+            leaderboardsButton.widthAnchor.constraint(greaterThanOrEqualTo: view.widthAnchor, multiplier: 0.5),
+            leaderboardsButton.heightAnchor.constraint(equalToConstant: 50),
+            leaderboardsButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            leaderboardsButton.topAnchor.constraint(lessThanOrEqualTo: timeModeButton.bottomAnchor, constant: 150),
+            leaderboardsButton.bottomAnchor.constraint(lessThanOrEqualTo: view.layoutMarginsGuide.bottomAnchor, constant: -20),
         ]
         
         NSLayoutConstraint.activate(constraints)
@@ -96,5 +119,13 @@ final class MainMenuViewController: UIViewController {
         gameViewController.modalTransitionStyle = .crossDissolve
 
         self.present(gameViewController, animated: true, completion: nil)
+    }
+    
+    @objc private func onLeaderboardsButtonTapped() {
+        let scrollViewController = LeaderboardsViewController()
+        scrollViewController.modalPresentationStyle = .fullScreen
+        scrollViewController.modalTransitionStyle = .crossDissolve
+
+        self.present(scrollViewController, animated: true, completion: nil)
     }
 }
